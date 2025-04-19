@@ -1,0 +1,14 @@
+#:schema https://rlbot.org/schemas/agent.json
+[settings]
+name = "Zero G"
+agent_id = "swz/zero-g-script"
+run_command = "target/release/zero-g-script.exe"
+run_command_linux = "target/release/zero-g-script"
+logo_file = "./icon.svg"
+
+[details]
+# description = ""
+# fun_fact = ""
+source_link = "https://github.com/swz-git/zero-g-script"
+developer = "swz"
+language = "rust"

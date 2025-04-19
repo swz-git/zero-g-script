@@ -1,0 +1,7 @@
+[package]
+name = "zero-g-script"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+rlbot = { git = "https://github.com/rlbot/rust-interface", branch = "full-into-partial" }

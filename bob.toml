@@ -1,0 +1,8 @@
+[[config]]
+project_name = "zero-g-script"
+bot_configs = ["./script.toml"]
+
+[config.builder_config]
+builder_type = "rust"
+targets = ["x86_64-pc-windows-gnu", "x86_64-unknown-linux-musl"]
+bin_name = "zero-g-script"
