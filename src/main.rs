@@ -4,8 +4,8 @@ use rlbot::{
     util::RLBotEnvironment,
 };
 
-// const TARGET_GRAVITY: f32 = -f32::MIN_POSITIVE;
-const TARGET_GRAVITY: f32 = -2000.0;
+const TARGET_GRAVITY: f32 = -f32::MIN_POSITIVE;
+// const TARGET_GRAVITY: f32 = -2000.0;
 
 const COMMAND_REPEAT_INTERVAL: f32 = 0.05; // seconds
 const COMMAND_REPEAT_DURATION: f32 = 0.5; // seconds
