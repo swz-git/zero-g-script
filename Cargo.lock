@@ -752,7 +752,7 @@ checksum = "2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c"
 [[package]]
 name = "rlbot"
 version = "0.1.0"
-source = "git+https://github.com/rlbot/rust-interface?branch=full-into-partial#471ba742caea2a53c77ea3e3166d8e9e9d271598"
+source = "git+https://github.com/rlbot/rust-interface?rev=f09fee8#f09fee812e03e07a6102c5ffcb8f3431bb084c5b"
 dependencies = [
  "kanal",
  "rlbot_flat",
@@ -762,8 +762,9 @@ dependencies = [
 [[package]]
 name = "rlbot_flat"
 version = "0.1.0"
-source = "git+https://github.com/rlbot/rust-interface?branch=full-into-partial#471ba742caea2a53c77ea3e3166d8e9e9d271598"
+source = "git+https://github.com/rlbot/rust-interface?rev=f09fee8#f09fee812e03e07a6102c5ffcb8f3431bb084c5b"
 dependencies = [
+ "eyre",
  "glam",
  "planus",
  "planus-codegen",
