@@ -1,5 +1,6 @@
 use rlbot::{
     Packet, RLBotConnection,
+    agents::run_script_agent,
     flat::{ConnectionSettings, ConsoleCommand, DesiredGameState, MatchPhase},
     util::AgentEnvironment,
 };
@@ -72,19 +73,10 @@ fn main() {
         agent_id,
     } = AgentEnvironment::from_env();
     let agent_id = agent_id.unwrap_or_else(|| "swz/zero-g-script".into());
-    let mut rlbot_connection = RLBotConnection::new(&server_addr).expect("connection");
+    let rlbot_connection = RLBotConnection::new(&server_addr).expect("connection");
 
-    rlbot_connection
-        .send_packet(ConnectionSettings {
-            agent_id: agent_id.clone(),
-            close_between_matches: true,
-            ..Default::default()
-        })
-        .expect("failed to send ConnectionSettings");
-
-    rlbot_connection
-        .send_packet(Packet::InitComplete)
-        .expect("failed to send InitComplete");
+    run_script_agent::<ZeroGScript>(agent_id.clone(), false, false, rlbot_connection)
+        .expect("run_script_agent failed");
 
     println!("Script with agent_id `{agent_id}` exited nicely");
 }
