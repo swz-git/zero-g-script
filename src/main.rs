@@ -1,7 +1,7 @@
 use rlbot::{
-    Packet, RLBotConnection,
+    RLBotConnection,
     agents::run_script_agent,
-    flat::{ConnectionSettings, ConsoleCommand, DesiredGameState, MatchPhase},
+    flat::{DesiredGameState, DesiredMatchInfo, MatchPhase},
     util::AgentEnvironment,
 };
 
@@ -58,10 +58,11 @@ impl rlbot::agents::ScriptAgent for ZeroGScript {
             packet_queue.push(DesiredGameState {
                 ball_states: vec![],
                 car_states: vec![],
-                match_info: None,
-                console_commands: vec![ConsoleCommand {
-                    command: format!("Set WorldInfo WorldGravityZ {}", TARGET_GRAVITY),
-                }],
+                match_info: Some(Box::new(DesiredMatchInfo {
+                    world_gravity_z: Some(TARGET_GRAVITY.into()),
+                    game_speed: None,
+                })),
+                console_commands: vec![],
             });
         }
     }
