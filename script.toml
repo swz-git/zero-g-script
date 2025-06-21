@@ -2,13 +2,13 @@
 [settings]
 name = "Zero G"
 agent_id = "swz/zero-g-script"
-run_command = "target/release/zero-g-script.exe"
-run_command_linux = "target/release/zero-g-script"
+run_command = "cargo run"
+run_command_linux = "cargo run"
 logo_file = "./icon.svg"
 
 [details]
-# description = ""
-# fun_fact = ""
+description = "Sets gravity to 0 and increases sticky forces by 300 uu/s so walls are easily drivable."
+fun_fact = "In space, nobody can hear you scream"
 source_link = "https://github.com/swz-git/zero-g-script"
 developer = "swz"
 language = "rust"

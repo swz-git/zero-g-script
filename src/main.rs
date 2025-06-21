@@ -1,12 +1,15 @@
+use rlbot::flat::{AirState, DesiredCarState, DesiredPhysics, Vector3, Vector3Partial};
 use rlbot::{
-    RLBotConnection,
     agents::run_script_agent,
     flat::{DesiredGameState, DesiredMatchInfo, MatchPhase},
     util::AgentEnvironment,
+    RLBotConnection,
 };
 
 const TARGET_GRAVITY: f32 = -f32::MIN_POSITIVE;
 // const TARGET_GRAVITY: f32 = -2000.0;
+
+const EXTRA_STICKY_FORCE: f32 = 300.0;
 
 const COMMAND_REPEAT_INTERVAL: f32 = 0.05; // seconds
 const COMMAND_REPEAT_DURATION: f32 = 0.5; // seconds
@@ -36,6 +39,47 @@ impl rlbot::agents::ScriptAgent for ZeroGScript {
         game_packet: rlbot::flat::GamePacket,
         packet_queue: &mut rlbot::util::PacketQueue,
     ) {
+        let dt = 1.0/120.0f32;
+        let mut any_sticky = false;
+        let mut car_states = vec![];
+        for car in game_packet.players.iter() {
+            let mut dcs = DesiredCarState::default();
+            if car.air_state == AirState::OnGround || game_packet.match_info.match_phase == MatchPhase::Countdown {
+                // Compute relative up and add extra sticky force
+                let v = car.physics.velocity;
+                let euler = car.physics.rotation;
+                let cp = euler.pitch.cos();
+                let sp = euler.pitch.sin();
+                let cy = euler.yaw.cos();
+                let sy = euler.yaw.sin();
+                let cr = euler.roll.cos();
+                let sr = euler.roll.sin();
+                let up_x = -cr * cy * sp - sr * sy;
+                let up_y = -cr * sy * sp + sr * cy;
+                let up_z = cp * cr;
+                dcs.physics = Some(DesiredPhysics {
+                    location: None,
+                    rotation: None,
+                    velocity: Some(Vector3Partial::from(Vector3 {
+                        x: v.x - up_x * EXTRA_STICKY_FORCE * dt,
+                        y: v.y - up_y * EXTRA_STICKY_FORCE * dt,
+                        z: v.z - up_z * EXTRA_STICKY_FORCE * dt,
+                    }).into()),
+                    angular_velocity: None,
+                }.into());
+                any_sticky = true;
+            }
+            car_states.push(dcs);
+        }
+        if any_sticky {
+            packet_queue.push(DesiredGameState {
+                ball_states: vec![],
+                car_states,
+                match_info: None,
+                console_commands: vec![],
+            });
+        }
+
         if game_packet.match_info.match_phase == MatchPhase::Kickoff
             && self.prev_match_phase == MatchPhase::Countdown
         {
