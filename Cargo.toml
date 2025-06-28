@@ -4,4 +4,4 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-rlbot = { git = "https://github.com/rlbot/rust-interface", rev = "f09fee8" }
+rlbot = { git = "https://github.com/rlbot/rust-interface", rev = "68530cd" }
