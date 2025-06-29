@@ -1,9 +1,9 @@
-use rlbot::flat::{AirState, DesiredCarState, DesiredPhysics, Vector3, Vector3Partial};
+use rlbot::flat::{AirState, DesiredCarState, Vector3, Vector3Partial};
 use rlbot::{
+    RLBotConnection,
     agents::run_script_agent,
     flat::{DesiredGameState, DesiredMatchInfo, MatchPhase},
     util::AgentEnvironment,
-    RLBotConnection,
 };
 
 const TARGET_GRAVITY: f32 = -f32::MIN_POSITIVE;
@@ -18,6 +18,7 @@ struct ZeroGScript {
     prev_match_phase: MatchPhase,
     last_kickoff_time: f32,
     last_application_time: f32,
+    prev_seconds_elapsed: f32,
 }
 
 impl rlbot::agents::ScriptAgent for ZeroGScript {
@@ -31,6 +32,7 @@ impl rlbot::agents::ScriptAgent for ZeroGScript {
             prev_match_phase: MatchPhase::Inactive,
             last_kickoff_time: 0.0,
             last_application_time: 0.0,
+            prev_seconds_elapsed: 0.0,
         }
     }
 
@@ -39,39 +41,36 @@ impl rlbot::agents::ScriptAgent for ZeroGScript {
         game_packet: rlbot::flat::GamePacket,
         packet_queue: &mut rlbot::util::PacketQueue,
     ) {
-        let dt = 1.0/120.0f32;
-        let mut any_sticky = false;
-        let mut car_states = vec![];
-        for car in game_packet.players.iter() {
-            let mut dcs = DesiredCarState::default();
-            if car.air_state == AirState::OnGround || game_packet.match_info.match_phase == MatchPhase::Countdown {
+        let dt = game_packet.match_info.seconds_elapsed - self.prev_seconds_elapsed;
+        self.prev_seconds_elapsed = game_packet.match_info.seconds_elapsed;
+
+        let mut car_states = vec![DesiredCarState::default(); game_packet.players.len()];
+        car_states
+            .iter_mut()
+            .zip(game_packet.players.iter())
+            .filter(|(_, car)| {
+                car.air_state == AirState::OnGround
+                    || game_packet.match_info.match_phase == MatchPhase::Countdown
+            })
+            .for_each(|(dcs, car)| {
                 // Compute relative up and add extra sticky force
-                let v = car.physics.velocity;
-                let euler = car.physics.rotation;
-                let cp = euler.pitch.cos();
-                let sp = euler.pitch.sin();
-                let cy = euler.yaw.cos();
-                let sy = euler.yaw.sin();
-                let cr = euler.roll.cos();
-                let sr = euler.roll.sin();
-                let up_x = -cr * cy * sp - sr * sy;
-                let up_y = -cr * sy * sp + sr * cy;
-                let up_z = cp * cr;
-                dcs.physics = Some(DesiredPhysics {
-                    location: None,
-                    rotation: None,
-                    velocity: Some(Vector3Partial::from(Vector3 {
-                        x: v.x - up_x * EXTRA_STICKY_FORCE * dt,
-                        y: v.y - up_y * EXTRA_STICKY_FORCE * dt,
-                        z: v.z - up_z * EXTRA_STICKY_FORCE * dt,
-                    }).into()),
-                    angular_velocity: None,
-                }.into());
-                any_sticky = true;
-            }
-            car_states.push(dcs);
-        }
-        if any_sticky {
+                let r = car.physics.rotation; // Euler rot
+                let up_x = -r.roll.cos() * r.yaw.cos() * r.pitch.sin() - r.roll.sin() * r.yaw.sin();
+                let up_y = -r.roll.cos() * r.yaw.sin() * r.pitch.sin() + r.roll.sin() * r.yaw.cos();
+                let up_z = r.pitch.cos() * r.roll.cos();
+
+                let physics = dcs.physics.get_or_insert_default();
+                physics.velocity = Some(
+                    Vector3Partial::from(Vector3 {
+                        x: car.physics.velocity.x - up_x * EXTRA_STICKY_FORCE * dt,
+                        y: car.physics.velocity.y - up_y * EXTRA_STICKY_FORCE * dt,
+                        z: car.physics.velocity.z - up_z * EXTRA_STICKY_FORCE * dt,
+                    })
+                    .into(),
+                )
+            });
+
+        if car_states.iter().any(|x| x.physics.is_some()) {
             packet_queue.push(DesiredGameState {
                 ball_states: vec![],
                 car_states,
